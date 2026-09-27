@@ -22,7 +22,7 @@ services:
     image: ollama/ollama:latest
     restart: unless-stopped
     ports:
-      - "8080:11434"
+      - "8050:11434"
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 10s
