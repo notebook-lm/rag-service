@@ -30,10 +30,18 @@ from rag.embeddings.embedding import Embedding
 from rag.embeddings.qwen3_embedding import Qwen3Embedding
 from rag.embeddings.qwen3_embedding_config import Qwen3EmbeddingConfig
 from rag.langchain_rag import LangChainRag
+from rag.parsers.document_parser_factory import DocumentParserFactory
+from rag.parsers.excel.openpyxl_excel_parser import OpenPyxlExcelParser
+from rag.parsers.office.legacy_office_document_parser import LegacyOfficeDocumentParser
+from rag.parsers.pdf.pypdf_pdf_parser import PyPdfPdfParser
+from rag.parsers.powerpoint.python_pptx_powerpoint_parser import PythonPptxPowerPointParser
+from rag.parsers.text.utf8_text_parser import Utf8TextParser
+from rag.parsers.word.python_docx_docx_parser import PythonDocxDocxParser
 from rag.rag import Rag
 from rag.rag_config import RagConfig
 from storage.minio import MinioClient
 from storage.minio_config import MinioConfig
+from storage.storage import Storage
 
 logging.basicConfig(
     level=logging.INFO,
@@ -48,18 +56,41 @@ messaging: Messaging = Kafka(
     ),
     database,
 )
+storage: Storage = MinioClient(
+    MinioConfig(
+        endpoint_url=MINIO_ENDPOINT,
+        access_key=MINIO_ROOT_USER,
+        secret_key=MINIO_ROOT_PASSWORD,
+        bucket=MINIO_BUCKET,
+    )
+)
+pdf_parser = PyPdfPdfParser()
+docx_parser = PythonDocxDocxParser()
+excel_parser = OpenPyxlExcelParser()
+powerpoint_parser = PythonPptxPowerPointParser()
+text_parser = Utf8TextParser()
+parser_factory = DocumentParserFactory(
+    pdf=pdf_parser,
+    docx=docx_parser,
+    excel=excel_parser,
+    powerpoint=powerpoint_parser,
+    text=text_parser,
+    doc=LegacyOfficeDocumentParser("doc", "docx", docx_parser),
+    xls=LegacyOfficeDocumentParser("xls", "xlsx", excel_parser),
+    ppt=LegacyOfficeDocumentParser("ppt", "pptx", powerpoint_parser),
+)
+chunker: Chunker = LangChainChunker(
+    ChunkConfig(
+        chunk_size=RAG_CHUNK_SIZE,
+        chunk_overlap=RAG_CHUNK_OVERLAP,
+    )
+)
 embedding: Embedding = Qwen3Embedding(
     Qwen3EmbeddingConfig(
         base_url=QWEN3_EMBEDDING_BASE_URL,
         model=QWEN3_EMBEDDING_MODEL,
         dimensions=QWEN3_EMBEDDING_DIMENSIONS,
         query_instruction=QWEN3_EMBEDDING_QUERY_INSTRUCTION,
-    )
-)
-chunker: Chunker = LangChainChunker(
-    ChunkConfig(
-        chunk_size=RAG_CHUNK_SIZE,
-        chunk_overlap=RAG_CHUNK_OVERLAP,
     )
 )
 rag: Rag = LangChainRag(
@@ -69,20 +100,18 @@ rag: Rag = LangChainRag(
     ),
     embedding,
 )
-minio = MinioClient(
-    MinioConfig(
-        endpoint_url=MINIO_ENDPOINT,
-        access_key=MINIO_ROOT_USER,
-        secret_key=MINIO_ROOT_PASSWORD,
-        bucket=MINIO_BUCKET,
-    )
-)
-
 
 def setup_kafka() -> None:
     logger.info("Kafka initializing")
 
-    document_uploaded_handler = DocumentUploadedHandler(messaging, database)
+    document_uploaded_handler = DocumentUploadedHandler(
+        messaging,
+        database,
+        storage,
+        parser_factory,
+        chunker,
+        rag,
+    )
 
     messaging.sub("document.uploaded", document_uploaded_handler.execute)
 
