@@ -6,16 +6,17 @@ from types import FrameType
 
 from confluent_kafka import Consumer, KafkaError, Message, Producer
 
+from database.database import Database
 from kafka.config import KAFKA_BOOTSTRAP_SERVERS, KAFKA_CONSUMER_GROUP
-
 
 logger = logging.getLogger(__name__)
 
 
 class KafkaClient:
-    def __init__(self) -> None:
+    def __init__(self, database: Database) -> None:
         self.running: bool = True
         self.handlers: dict[str, Callable[[Message], None]] = {}
+        self.database = database
         self.consumer = Consumer(
             {
                 "bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS,
@@ -80,4 +81,3 @@ class KafkaClient:
         self.producer.flush(10)
         self.consumer.close()
         logger.info("Kafka consumer stopped")
-

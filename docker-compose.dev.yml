@@ -4,9 +4,13 @@ services:
       target: builder
     command: uv run python main.py
     restart: "no"
+    environment:
+      UV_LINK_MODE: copy
     volumes:
       - .:/app
+      - rag-service-venv:/app/.venv
       - uv-cache:/root/.cache/uv
 
 volumes:
+  rag-service-venv:
   uv-cache:
