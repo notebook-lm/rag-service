@@ -1,7 +1,14 @@
 import logging
 
 from config.database import DATABASE_URL
+from config.embedding import (
+    QWEN3_EMBEDDING_BASE_URL,
+    QWEN3_EMBEDDING_DIMENSIONS,
+    QWEN3_EMBEDDING_MODEL,
+    QWEN3_EMBEDDING_QUERY_INSTRUCTION,
+)
 from config.kafka import KAFKA_BOOTSTRAP_SERVERS, KAFKA_CONSUMER_GROUP
+from config.rag import RAG_COLLECTION_NAME, RAG_DATABASE_URL
 from config.storage import (
     MINIO_BUCKET,
     MINIO_ENDPOINT,
@@ -15,6 +22,12 @@ from messaging.handlers.document_uploaded import DocumentUploadedHandler
 from messaging.kafka import Kafka
 from messaging.kafka_config import KafkaConfig
 from messaging.messaging import Messaging
+from rag.embeddings.embedding import Embedding
+from rag.embeddings.qwen3_embedding import Qwen3Embedding
+from rag.embeddings.qwen3_embedding_config import Qwen3EmbeddingConfig
+from rag.langchain_rag import LangChainRag
+from rag.rag import Rag
+from rag.rag_config import RagConfig
 from storage.minio import MinioClient
 from storage.minio_config import MinioConfig
 
@@ -30,6 +43,21 @@ messaging: Messaging = Kafka(
         consumer_group=KAFKA_CONSUMER_GROUP,
     ),
     database,
+)
+embedding: Embedding = Qwen3Embedding(
+    Qwen3EmbeddingConfig(
+        base_url=QWEN3_EMBEDDING_BASE_URL,
+        model=QWEN3_EMBEDDING_MODEL,
+        dimensions=QWEN3_EMBEDDING_DIMENSIONS,
+        query_instruction=QWEN3_EMBEDDING_QUERY_INSTRUCTION,
+    )
+)
+rag: Rag = LangChainRag(
+    RagConfig(
+        connection=RAG_DATABASE_URL,
+        collection_name=RAG_COLLECTION_NAME,
+    ),
+    embedding,
 )
 minio = MinioClient(
     MinioConfig(
