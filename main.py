@@ -1,5 +1,6 @@
 import logging
 
+from config.chunk import RAG_CHUNK_OVERLAP, RAG_CHUNK_SIZE
 from config.database import DATABASE_URL
 from config.embedding import (
     QWEN3_EMBEDDING_BASE_URL,
@@ -22,6 +23,9 @@ from messaging.handlers.document_uploaded import DocumentUploadedHandler
 from messaging.kafka import Kafka
 from messaging.kafka_config import KafkaConfig
 from messaging.messaging import Messaging
+from rag.chunk.chunk_config import ChunkConfig
+from rag.chunk.chunker import Chunker
+from rag.chunk.langchain_chunker import LangChainChunker
 from rag.embeddings.embedding import Embedding
 from rag.embeddings.qwen3_embedding import Qwen3Embedding
 from rag.embeddings.qwen3_embedding_config import Qwen3EmbeddingConfig
@@ -50,6 +54,12 @@ embedding: Embedding = Qwen3Embedding(
         model=QWEN3_EMBEDDING_MODEL,
         dimensions=QWEN3_EMBEDDING_DIMENSIONS,
         query_instruction=QWEN3_EMBEDDING_QUERY_INSTRUCTION,
+    )
+)
+chunker: Chunker = LangChainChunker(
+    ChunkConfig(
+        chunk_size=RAG_CHUNK_SIZE,
+        chunk_overlap=RAG_CHUNK_OVERLAP,
     )
 )
 rag: Rag = LangChainRag(
