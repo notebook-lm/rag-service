@@ -1,0 +1,44 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build and package artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# Coverage and test output
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+
+# Logs and temporary files
+*.log
+*.tmp
