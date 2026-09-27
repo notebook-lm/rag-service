@@ -1,24 +1,18 @@
 from minio import Minio
 
-from storage.config import (
-    MINIO_BUCKET,
-    MINIO_ROOT_PASSWORD,
-    MINIO_ROOT_USER,
-    minio_connection,
-)
+from storage.minio_config import MinioConfig
 
 
 class MinioClient:
     """MinIO object storage client for the configured RAG document bucket."""
 
-    def __init__(self) -> None:
-        endpoint, secure = minio_connection()
-        self.bucket = MINIO_BUCKET
+    def __init__(self, config: MinioConfig) -> None:
+        self.bucket = config.bucket
         self.client = Minio(
-            endpoint,
-            access_key=MINIO_ROOT_USER,
-            secret_key=MINIO_ROOT_PASSWORD,
-            secure=secure,
+            config.endpoint,
+            access_key=config.access_key,
+            secret_key=config.secret_key,
+            secure=config.secure,
         )
 
     def get_object(self, object_key: str):

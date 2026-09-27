@@ -3,28 +3,28 @@ import logging
 
 from confluent_kafka import Message
 
-from database.database import Database
+from database.postgres import Postgres
 from database.entities.inbox import Inbox
 from database.repositories.inbox_repository import InboxRepository
-from kafka.events.document_processing import DocumentProcessingData, DocumentProcessingEvent
-from kafka.events.document_uploaded import DocumentUploadedData, DocumentUploadedEvent
-from kafka.kafka import KafkaClient
+from messaging.events.document_processing import DocumentProcessingData, DocumentProcessingEvent
+from messaging.events.document_uploaded import DocumentUploadedData, DocumentUploadedEvent
+from messaging.kafka import KafkaClient
 
 logger = logging.getLogger(__name__)
 
 
 class DocumentUploadedHandler:
-    def __init__(self, kafka: KafkaClient, database: Database) -> None:
-        self.kafka = kafka
-        self.inbox_repository = InboxRepository(database)
-        self.database = database
+    def __init__(self, kafka_client: KafkaClient, postgres: Postgres) -> None:
+        self.kafka_client = kafka_client
+        self.inbox_repository = InboxRepository(postgres)
+        self.postgres = postgres
 
     def execute(self, message: Message) -> None:
         payload = message.value()
         document_uploaded_payload = json.loads(payload)
         event_id = document_uploaded_payload["eventId"]
 
-        with self.database.transaction() as cursor:
+        with self.postgres.transaction() as cursor:
             if self.inbox_repository.exists(cursor, event_id):
                 logger.info("Skipping duplicate document.uploaded event %s", event_id)
                 return
@@ -73,6 +73,6 @@ class DocumentUploadedHandler:
         )
 
         logger.info("Document %s is now processing", document_uploaded_event.data.document_id)
-        self.kafka.pub(
+        self.kafka_client.pub(
             "document.processing", document_processing_event.toJson(), message.key()
         )

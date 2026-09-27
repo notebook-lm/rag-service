@@ -6,26 +6,26 @@ from types import FrameType
 
 from confluent_kafka import Consumer, KafkaError, Message, Producer
 
-from database.database import Database
-from kafka.config import KAFKA_BOOTSTRAP_SERVERS, KAFKA_CONSUMER_GROUP
+from database.postgres import Postgres
+from messaging.kafka_config import KafkaConfig
 
 logger = logging.getLogger(__name__)
 
 
 class KafkaClient:
-    def __init__(self, database: Database) -> None:
+    def __init__(self, config: KafkaConfig, postgres: Postgres) -> None:
         self.running: bool = True
         self.handlers: dict[str, Callable[[Message], None]] = {}
-        self.database = database
+        self.postgres = postgres
         self.consumer = Consumer(
             {
-                "bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS,
-                "group.id": KAFKA_CONSUMER_GROUP,
+                "bootstrap.servers": config.bootstrap_servers,
+                "group.id": config.consumer_group,
                 "auto.offset.reset": "earliest",
                 "enable.auto.commit": False,
             }
         )
-        self.producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS})
+        self.producer = Producer({"bootstrap.servers": config.bootstrap_servers})
 
     def start(self) -> None:
         if not self.handlers:

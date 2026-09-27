@@ -5,16 +5,19 @@ from typing import Any
 import psycopg
 from psycopg import Cursor
 
-from database.config import DATABASE_URL
+from database.postgres_config import PostgresConfig
 
 
-class Database:
+class Postgres:
     """PostgreSQL client used by application services and repositories."""
+
+    def __init__(self, config: PostgresConfig) -> None:
+        self.config = config
 
     @contextmanager
     def transaction(self) -> Iterator[Cursor[Any]]:
         """Yield a cursor in a transaction that commits only on success."""
-        with psycopg.connect(DATABASE_URL) as connection:
+        with psycopg.connect(self.config.postgres_url) as connection:
             with connection.transaction(), connection.cursor() as cursor:
                 yield cursor
 
