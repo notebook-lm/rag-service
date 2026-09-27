@@ -1,0 +1,12 @@
+services:
+  rag-service:
+    build:
+      target: builder
+    command: uv run python main.py
+    restart: "no"
+    volumes:
+      - .:/app
+      - uv-cache:/root/.cache/uv
+
+volumes:
+  uv-cache:

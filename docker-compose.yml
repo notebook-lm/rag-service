@@ -1,0 +1,16 @@
+services:
+  rag-service:
+    image: notebook-lm/rag-service:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    init: true
+    restart: unless-stopped
+    networks:
+      - notebook-lm
+
+networks:
+  notebook-lm:
+    external: true

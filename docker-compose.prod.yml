@@ -1,0 +1,4 @@
+services:
+  rag-service:
+    image: notebook-lm/rag-service:prod
+    restart: unless-stopped
