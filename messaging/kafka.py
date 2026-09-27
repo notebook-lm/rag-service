@@ -6,17 +6,18 @@ from types import FrameType
 
 from confluent_kafka import Consumer, KafkaError, Message, Producer
 
-from database.postgres import Postgres
+from database.database import Database
 from messaging.kafka_config import KafkaConfig
+from messaging.messaging import Messaging
 
 logger = logging.getLogger(__name__)
 
 
-class KafkaClient:
-    def __init__(self, config: KafkaConfig, postgres: Postgres) -> None:
+class Kafka(Messaging):
+    def __init__(self, config: KafkaConfig, database: Database) -> None:
         self.running: bool = True
         self.handlers: dict[str, Callable[[Message], None]] = {}
-        self.postgres = postgres
+        self.database = database
         self.consumer = Consumer(
             {
                 "bootstrap.servers": config.bootstrap_servers,

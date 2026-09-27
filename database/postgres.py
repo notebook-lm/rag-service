@@ -5,10 +5,11 @@ from typing import Any
 import psycopg
 from psycopg import Cursor
 
+from database.database import Database
 from database.postgres_config import PostgresConfig
 
 
-class Postgres:
+class Postgres(Database):
     """PostgreSQL client used by application services and repositories."""
 
     def __init__(self, config: PostgresConfig) -> None:

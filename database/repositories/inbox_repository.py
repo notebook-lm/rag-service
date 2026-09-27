@@ -2,17 +2,17 @@ import json
 
 from psycopg import Cursor
 
-from database.postgres import Postgres
+from database.database import Database
 from database.entities.inbox import Inbox
 
 
 class InboxRepository:
-    def __init__(self, postgres: Postgres) -> None:
-        self.postgres = postgres
+    def __init__(self, database: Database) -> None:
+        self.database = database
 
     def exists(self, cursor: Cursor, event_id: str) -> bool:
         return (
-            self.postgres.fetch_one(
+            self.database.fetch_one(
                 cursor,
                 "SELECT 1 FROM inbox_messages WHERE event_id = %s",
                 (event_id,),
@@ -21,7 +21,7 @@ class InboxRepository:
         )
 
     def create(self, cursor: Cursor, message: Inbox) -> None:
-        self.postgres.execute(
+        self.database.execute(
             cursor,
             """
             INSERT INTO inbox_messages (
@@ -40,7 +40,7 @@ class InboxRepository:
         )
 
     def mark_processed(self, cursor: Cursor, event_id: str) -> None:
-        self.postgres.execute(
+        self.database.execute(
             cursor,
             "UPDATE inbox_messages SET processed_at = NOW() WHERE event_id = %s",
             (event_id,),
