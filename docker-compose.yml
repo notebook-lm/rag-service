@@ -13,25 +13,37 @@ services:
         condition: service_healthy
       embedding:
         condition: service_healthy
+      embedding-init:
+        condition: service_completed_successfully
     networks:
       - notebook-lm
 
   embedding:
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9
-    command:
-      - --model-id
-      - Qwen/Qwen3-Embedding-0.6B
+    image: ollama/ollama:latest
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "8080:11434"
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:80/health"]
+      test: ["CMD", "ollama", "list"]
       interval: 10s
       timeout: 5s
       retries: 30
-      start_period: 30s
+      start_period: 10s
     volumes:
-      - embedding-data:/data
+      - embedding-data:/root/.ollama
+    networks:
+      - notebook-lm
+
+  embedding-init:
+    image: ollama/ollama:latest
+    restart: "no"
+    depends_on:
+      embedding:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command: "OLLAMA_HOST=http://embedding:11434 ollama pull qwen3-embedding:0.6b"
+    volumes:
+      - embedding-data:/root/.ollama
     networks:
       - notebook-lm
 

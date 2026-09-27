@@ -1,4 +1,4 @@
-"""Qwen3 embedding implementation served by TEI."""
+"""Qwen3 embedding implementation through an OpenAI-compatible endpoint."""
 
 from collections.abc import Sequence
 
@@ -9,7 +9,7 @@ from rag.embeddings.qwen3_embedding_config import Qwen3EmbeddingConfig
 
 
 class Qwen3Embedding(Embedding):
-    """Generate Qwen3 embeddings through TEI's OpenAI-compatible API."""
+    """Generate Qwen3 embeddings through an OpenAI-compatible API."""
 
     def __init__(self, config: Qwen3EmbeddingConfig) -> None:
         self.config = config
@@ -19,7 +19,6 @@ class Qwen3Embedding(Embedding):
         response = self.client.embeddings.create(
             model=self.config.model,
             input=list(texts),
-            dimensions=self.config.dimensions,
         )
         return [item.embedding for item in response.data]
 
@@ -27,6 +26,5 @@ class Qwen3Embedding(Embedding):
         response = self.client.embeddings.create(
             model=self.config.model,
             input=f"Instruct: {self.config.query_instruction}\nQuery: {text}",
-            dimensions=self.config.dimensions,
         )
         return response.data[0].embedding
