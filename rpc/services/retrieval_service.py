@@ -35,7 +35,7 @@ class RetrievalService(retrieval_pb2_grpc.RetrievalServiceServicer):
                 f"limit must be between 1 and {MAX_LIMIT}",
             )
 
-        documents = self.rag.search(
+        documents = await self.rag.search_async(
             query,
             {"project_id": project_id, "document_id": {"$in": document_ids}},
             limit,

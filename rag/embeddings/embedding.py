@@ -16,3 +16,11 @@ class Embedding(Embeddings, ABC):
     @abstractmethod
     def embed_query(self, text: str) -> list[float]:
         """Embed one query for retrieval."""
+
+    @abstractmethod
+    async def aembed_documents(self, texts: Sequence[str]) -> list[list[float]]:
+        """Asynchronously embed document text in input order."""
+
+    @abstractmethod
+    async def aembed_query(self, text: str) -> list[float]:
+        """Asynchronously embed one query for retrieval."""

@@ -1,5 +1,6 @@
 """LangChain-backed RAG implementation."""
 
+import asyncio
 from collections.abc import Sequence
 
 from langchain_core.documents import Document
@@ -47,3 +48,12 @@ class LangChainRag(Rag):
                 filter=metadata_filter,
             )
         ]
+
+    async def search_async(
+        self,
+        query: str,
+        filters: dict[str, object],
+        limit: int = 5,
+    ) -> list[RagDocument]:
+        """Run the blocking PGVector search outside the caller's event loop."""
+        return await asyncio.to_thread(self.search, query, filters, limit)

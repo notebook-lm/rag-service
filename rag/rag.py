@@ -26,3 +26,12 @@ class Rag(ABC):
         limit: int = 5,
     ) -> list[RagDocument]:
         """Return query-relevant chunks constrained by metadata filters."""
+
+    @abstractmethod
+    async def search_async(
+        self,
+        query: str,
+        filters: dict[str, Any],
+        limit: int = 5,
+    ) -> list[RagDocument]:
+        """Asynchronously return query-relevant, metadata-filtered chunks."""

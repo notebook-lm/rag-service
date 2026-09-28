@@ -1,5 +1,6 @@
 """Unit tests for gRPC context retrieval."""
 
+import asyncio
 import unittest
 
 from rag.document import RagDocument
@@ -11,7 +12,7 @@ class RagSpy:
     def __init__(self) -> None:
         self.calls: list[dict[str, object]] = []
 
-    def search(
+    async def search_async(
         self,
         query: str,
         filters: dict[str, object],
@@ -28,6 +29,17 @@ class RagSpy:
                 {"document_id": "document-2", "filename": "notes.txt", "chunk_index": 4},
             ),
         ]
+
+
+class DelayedRagSpy(RagSpy):
+    async def search_async(
+        self,
+        query: str,
+        filters: dict[str, object],
+        limit: int = 5,
+    ) -> list[RagDocument]:
+        await asyncio.sleep(0.05)
+        return await super().search_async(query, filters, limit)
 
 
 class RetrievalServiceTests(unittest.IsolatedAsyncioTestCase):
@@ -80,6 +92,23 @@ class RetrievalServiceTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(rag.calls[0]["limit"], 5)
+
+    async def test_retrieve_context_allows_concurrent_awaits(self) -> None:
+        rag = DelayedRagSpy()
+        service = RetrievalService(rag)
+        request = retrieval_pb2.RetrieveContextRequest(
+            query="question",
+            project_id="project-1",
+            document_ids=["document-1"],
+        )
+
+        first, second = await asyncio.gather(
+            service.RetrieveContext(request, context=None),
+            service.RetrieveContext(request, context=None),
+        )
+
+        self.assertEqual(len(rag.calls), 2)
+        self.assertEqual(first.context, second.context)
 
 
 if __name__ == "__main__":
