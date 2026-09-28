@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from typing import Any
 
 from rag.document import RagDocument
 
@@ -18,5 +19,10 @@ class Rag(ABC):
         """Add multiple documents to the RAG index."""
 
     @abstractmethod
-    def search(self, query: str, limit: int = 5) -> list[RagDocument]:
-        """Return documents relevant to a query."""
+    def search(
+        self,
+        query: str,
+        filters: dict[str, Any],
+        limit: int = 5,
+    ) -> list[RagDocument]:
+        """Return query-relevant chunks constrained by metadata filters."""

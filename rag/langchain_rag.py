@@ -32,8 +32,18 @@ class LangChainRag(Rag):
             [Document(page_content=document.content, metadata=document.metadata) for document in documents]
         )
 
-    def search(self, query: str, limit: int = 5) -> list[RagDocument]:
+    def search(
+        self,
+        query: str,
+        filters: dict[str, object],
+        limit: int = 5,
+    ) -> list[RagDocument]:
+        metadata_filter = dict(filters)
         return [
             RagDocument(content=document.page_content, metadata=document.metadata)
-            for document in self.vector_store.similarity_search(query, k=limit)
+            for document in self.vector_store.similarity_search(
+                query,
+                k=limit,
+                filter=metadata_filter,
+            )
         ]
