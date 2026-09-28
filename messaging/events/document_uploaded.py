@@ -6,6 +6,7 @@ class DocumentUploadedData:
         self,
         object_key: str,
         project_id: str,
+        user_id: str,
         size_bytes: int,
         document_id: str,
         content_type: str,
@@ -13,6 +14,7 @@ class DocumentUploadedData:
     ) -> None:
         self.object_key = object_key
         self.project_id = project_id
+        self.user_id = user_id
         self.size_bytes = size_bytes
         self.document_id = document_id
         self.content_type = content_type
@@ -41,6 +43,7 @@ class DocumentUploadedEvent:
                 "data": {
                     "objectKey": self.data.object_key,
                     "projectId": self.data.project_id,
+                    "userId": self.data.user_id,
                     "sizeBytes": self.data.size_bytes,
                     "documentId": self.data.document_id,
                     "contentType": self.data.content_type,

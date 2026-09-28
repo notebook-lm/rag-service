@@ -6,10 +6,12 @@ class DocumentProcessingData:
         self,
         document_id: str,
         project_id: str,
+        user_id: str,
         status: str,
     ) -> None:
         self.document_id = document_id
         self.project_id = project_id
+        self.user_id = user_id
         self.status = status
 
 
@@ -35,6 +37,7 @@ class DocumentProcessingEvent:
                 "data": {
                     "documentId": self.data.document_id,
                     "projectId": self.data.project_id,
+                    "userId": self.data.user_id,
                     "status": self.data.status,
                 },
             }

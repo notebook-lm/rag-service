@@ -71,6 +71,7 @@ class DocumentUploadedHandler:
             data=DocumentUploadedData(
                 object_key=str(document_uploaded_data["objectKey"]),
                 project_id=str(document_uploaded_data["projectId"]),
+                user_id=str(document_uploaded_data["userId"]),
                 size_bytes=int(document_uploaded_data["sizeBytes"]),
                 document_id=str(document_uploaded_data["documentId"]),
                 content_type=str(document_uploaded_data["contentType"]),
@@ -92,6 +93,7 @@ class DocumentUploadedHandler:
             {
                 "document_id": document_uploaded_event.data.document_id,
                 "project_id": document_uploaded_event.data.project_id,
+                "user_id": document_uploaded_event.data.user_id,
                 "object_key": document_uploaded_event.data.object_key,
                 "filename": storage_object.metadata.filename,
                 "content_type": storage_object.metadata.content_type,
@@ -137,6 +139,7 @@ class DocumentUploadedHandler:
             data=DocumentProcessedData(
                 document_id=event.data.document_id,
                 project_id=event.data.project_id,
+                user_id=event.data.user_id,
                 chunk_count=chunk_count,
             ),
             event_id=event.event_id,
@@ -155,6 +158,7 @@ class DocumentUploadedHandler:
             data=DocumentProcessingData(
                 document_id=event.data.document_id,
                 project_id=event.data.project_id,
+                user_id=event.data.user_id,
                 status=status,
             ),
             event_id=event.event_id,

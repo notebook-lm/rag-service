@@ -6,10 +6,12 @@ class DocumentProcessedData:
         self,
         document_id: str,
         project_id: str,
+        user_id: str,
         chunk_count: int,
     ) -> None:
         self.document_id = document_id
         self.project_id = project_id
+        self.user_id = user_id
         self.chunk_count = chunk_count
 
 
@@ -35,6 +37,7 @@ class DocumentProcessedEvent:
                 "data": {
                     "documentId": self.data.document_id,
                     "projectId": self.data.project_id,
+                    "userId": self.data.user_id,
                     "chunkCount": self.data.chunk_count,
                 },
             }
