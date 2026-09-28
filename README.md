@@ -26,3 +26,41 @@ document_chunks = rag.search(
 ```
 
 Always include `project_id` in the filters passed by an integrating service. This prevents chunks from unrelated projects from entering the candidate set.
+
+## gRPC Hello World
+
+The service also exposes an async gRPC endpoint on port `50051`:
+
+```text
+notebooklm.rag.v1.HelloService/SayHello
+```
+
+Regenerate Python bindings after changing a file in `proto/`:
+
+```bash
+uv run python scripts/generate_proto.py
+```
+
+Start the service with Docker Compose, then call it from the project environment:
+
+```bash
+uv run python - <<'PY'
+import asyncio
+import grpc
+from rpc.generated import hello_pb2, hello_pb2_grpc
+
+async def main():
+    async with grpc.aio.insecure_channel("localhost:50051") as channel:
+        client = hello_pb2_grpc.HelloServiceStub(channel)
+        response = await client.SayHello(hello_pb2.HelloRequest(name="An"))
+        print(response.message)
+
+asyncio.run(main())
+PY
+```
+
+Expected output:
+
+```text
+Hello, An!
+```

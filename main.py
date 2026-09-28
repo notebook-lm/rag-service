@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from config.chunk import RAG_CHUNK_OVERLAP, RAG_CHUNK_SIZE
 from config.database import DATABASE_URL
@@ -23,6 +24,10 @@ from messaging.handlers.document_uploaded import DocumentUploadedHandler
 from messaging.kafka import Kafka
 from messaging.kafka_config import KafkaConfig
 from messaging.messaging import Messaging
+from rpc.generated import hello_pb2_grpc
+from rpc.grpc import Grpc
+from rpc.rpc import Rpc
+from rpc.services.hello_service import HelloService
 from rag.chunk.chunk_config import ChunkConfig
 from rag.chunk.chunker import Chunker
 from rag.chunk.langchain_chunker import LangChainChunker
@@ -100,6 +105,7 @@ rag: Rag = LangChainRag(
     ),
     embedding,
 )
+rpc: Rpc = Grpc()
 
 def setup_kafka() -> None:
     logger.info("Kafka initializing")
@@ -118,10 +124,41 @@ def setup_kafka() -> None:
     logger.info("Kafka initialized")
 
 
+def setup_grpc() -> None:
+    logger.info("gRPC initializing")
+    rpc.add_service(
+        HelloService(),
+        hello_pb2_grpc.add_HelloServiceServicer_to_server,
+    )
+    logger.info("gRPC initialized")
+
+
+def start_kafka() -> None:
+    messaging.start()
+
+
+def start_grpc() -> None:
+    rpc.start()
+
+
 def main() -> None:
     logger.info("Application started")
     setup_kafka()
-    messaging.start()
+    setup_grpc()
+
+    kafka_thread = threading.Thread(
+        target=start_kafka,
+        name="kafka-consumer",
+        daemon=True,
+    )
+    grpc_thread = threading.Thread(
+        target=start_grpc,
+        name="grpc-server",
+        daemon=True,
+    )
+    kafka_thread.start()
+    grpc_thread.start()
+    grpc_thread.join()
 
 
 if __name__ == "__main__":
