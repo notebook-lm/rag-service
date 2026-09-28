@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package notebooklm.rag.v1;
+
+service RetrievalService {
+  rpc RetrieveContext(RetrieveContextRequest) returns (RetrieveContextResponse);
+}
+
+message RetrieveContextRequest {
+  string query = 1;
+  string project_id = 2;
+  repeated string document_ids = 3;
+  int32 limit = 4;
+}
+
+message ContextChunk {
+  string content = 1;
+  string document_id = 2;
+  string filename = 3;
+  int32 chunk_index = 4;
+}
+
+message RetrieveContextResponse {
+  repeated ContextChunk chunks = 1;
+  string context = 2;
+}

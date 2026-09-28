@@ -24,10 +24,11 @@ from messaging.handlers.document_uploaded import DocumentUploadedHandler
 from messaging.kafka import Kafka
 from messaging.kafka_config import KafkaConfig
 from messaging.messaging import Messaging
-from rpc.generated import hello_pb2_grpc
+from rpc.generated import hello_pb2_grpc, retrieval_pb2_grpc
 from rpc.grpc import Grpc
 from rpc.rpc import Rpc
 from rpc.services.hello_service import HelloService
+from rpc.services.retrieval_service import RetrievalService
 from rag.chunk.chunk_config import ChunkConfig
 from rag.chunk.chunker import Chunker
 from rag.chunk.langchain_chunker import LangChainChunker
@@ -129,6 +130,10 @@ def setup_grpc() -> None:
     rpc.add_service(
         HelloService(),
         hello_pb2_grpc.add_HelloServiceServicer_to_server,
+    )
+    rpc.add_service(
+        RetrievalService(rag),
+        retrieval_pb2_grpc.add_RetrievalServiceServicer_to_server,
     )
     logger.info("gRPC initialized")
 
