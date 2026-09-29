@@ -61,12 +61,12 @@ Main components:
 
 1. The Document service uploads a file to MinIO and publishes a `document.uploaded` event to Kafka.
 2. `DocumentUploadedHandler` checks the `eventId` in the inbox table. Previously processed events are skipped.
-3. The service publishes `document.processing` with status `PROCESSING`.
+3. The service publishes `document.processing` when processing starts.
 4. The file is downloaded from MinIO; a parser is selected by filename extension or `content_type`.
 5. The service publishes `document.content.extracted`, carrying the full extracted text so the Document service can persist it.
 6. The extracted text is split using `RAG_CHUNK_SIZE` and `RAG_CHUNK_OVERLAP`.
 7. Each chunk is embedded and stored in PGVector together with project, document, and user metadata.
-8. The service publishes `document.processed` with the chunk count, then publishes `document.processing` with status `COMPLETED`.
+8. The service publishes `document.processed` with the chunk count after indexing completes.
 
 ## Requirements
 
@@ -253,7 +253,7 @@ Minimum payload consumed by the service:
 | Topic / event type | Published when | Data |
 | --- | --- | --- |
 | `document.content.extracted` | Document parsing succeeds, before chunking/indexing | `documentId`, `projectId`, `userId`, `content` |
-| `document.processing` | Before parsing and after indexing completes | `documentId`, `projectId`, `userId`, `status` (`PROCESSING` or `COMPLETED`) |
+| `document.processing` | Before parsing begins | `documentId`, `projectId`, `userId` |
 | `document.processed` | Document indexing succeeds | `documentId`, `projectId`, `userId`, `chunkCount` |
 
 The consumer stores the `eventId` in the inbox table within the same transaction to avoid re-indexing messages redelivered by Kafka.

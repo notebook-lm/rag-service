@@ -57,7 +57,6 @@ class DocumentEventUserIdTests(unittest.TestCase):
                 document_id="document-1",
                 project_id="project-1",
                 user_id="user-1",
-                status="PROCESSING",
             ),
             event_id="event-1",
             event_type="document.processing",
@@ -67,6 +66,7 @@ class DocumentEventUserIdTests(unittest.TestCase):
         payload = json.loads(event.toJson())
 
         self.assertEqual(payload["data"]["userId"], "user-1")
+        self.assertNotIn("status", payload["data"])
 
     def test_processed_event_serializes_user_id(self) -> None:
         event = DocumentProcessedEvent(

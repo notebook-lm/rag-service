@@ -87,7 +87,7 @@ class DocumentUploadedHandler:
         )
 
         logger.info("Document %s is now processing", document_uploaded_event.data.document_id)
-        self._publish_processing(document_uploaded_event, "PROCESSING", message.key())
+        self._publish_processing(document_uploaded_event, message.key())
 
         storage_object = self.storage.get(document_uploaded_event.data.object_key)
         
@@ -119,7 +119,6 @@ class DocumentUploadedHandler:
             len(chunks),
         )
         self._publish_processed(document_uploaded_event, len(chunks), message.key())
-        self._publish_processing(document_uploaded_event, "COMPLETED", message.key())
 
     def _get_parser(self, storage_object: StorageObject):
         if storage_object.metadata.filename:
@@ -181,7 +180,6 @@ class DocumentUploadedHandler:
     def _publish_processing(
         self,
         event: DocumentUploadedEvent,
-        status: str,
         key: bytes | str | None,
     ) -> None:
         processing_event = DocumentProcessingEvent(
@@ -189,7 +187,6 @@ class DocumentUploadedHandler:
                 document_id=event.data.document_id,
                 project_id=event.data.project_id,
                 user_id=event.data.user_id,
-                status=status,
             ),
             event_id=event.event_id,
             event_type="document.processing",
