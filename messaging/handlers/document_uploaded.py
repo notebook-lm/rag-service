@@ -90,9 +90,11 @@ class DocumentUploadedHandler:
         self._publish_processing(document_uploaded_event, "PROCESSING", message.key())
 
         storage_object = self.storage.get(document_uploaded_event.data.object_key)
+        
         parser = self._get_parser(storage_object)
         text = parser.parse(storage_object.content)
         self._publish_content_extracted(document_uploaded_event, text, message.key())
+
         chunks = self.chunker.chunk(
             text,
             {
