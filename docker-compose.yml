@@ -19,7 +19,7 @@ services:
     networks:
       - notebook-lm
     ports:
-      - "50051:50051"
+      - "${GRPC_PORT:-50051}:${GRPC_PORT:-50051}"
 
   embedding:
     container_name: rag-service-embedding
