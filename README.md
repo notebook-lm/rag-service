@@ -93,6 +93,7 @@ cp .env.example .env
 | --- | --- | --- |
 | `KAFKA_BOOTSTRAP_SERVERS` | `kafka:9092` | Kafka bootstrap servers. |
 | `KAFKA_CONSUMER_GROUP` | `rag-service` | Consumer group that processes documents. |
+| `GRPC_PORT` | `50051` | Port on which the gRPC server listens. |
 | `DATABASE_URL` | `postgresql://…/rag_service` | Database used for inbox/idempotency records. |
 | `MINIO_ENDPOINT` | `http://minio:9000` | MinIO endpoint. |
 | `MINIO_ROOT_USER` | `minioadmin` | MinIO access key. |

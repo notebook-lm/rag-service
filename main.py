@@ -9,6 +9,7 @@ from config.embedding import (
     QWEN3_EMBEDDING_MODEL,
     QWEN3_EMBEDDING_QUERY_INSTRUCTION,
 )
+from config.grpc import GRPC_PORT
 from config.kafka import KAFKA_BOOTSTRAP_SERVERS, KAFKA_CONSUMER_GROUP
 from config.rag import RAG_COLLECTION_NAME, RAG_DATABASE_URL
 from config.storage import (
@@ -106,7 +107,7 @@ rag: Rag = LangChainRag(
     ),
     embedding,
 )
-rpc: Rpc = Grpc()
+rpc: Rpc = Grpc(port=GRPC_PORT)
 
 def setup_kafka() -> None:
     logger.info("Kafka initializing")
