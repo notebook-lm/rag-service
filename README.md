@@ -29,7 +29,8 @@ flowchart LR
     P --> C["Text chunker"]
     C --> E["Qwen3 Embedding / Ollama"]
     E --> V["PostgreSQL + PGVector"]
-    R -->|"document.processing / document.processed"| K
+    R -->|"document.processing / document.parsed / document.processed"| K
+    R -->|"document.parsed.failed / document.processed.failed"| K
     A["API / Chat service"] -->|"gRPC RetrieveContext"| R
     R -->|"Relevant context"| A
 ```
@@ -55,7 +56,7 @@ Main components:
 - Generates embeddings with `qwen3-embedding:0.6b` (1024 dimensions by default).
 - Stores vectors in PostgreSQL with PGVector and performs filtered semantic search through JSONB metadata.
 - Returns project- and document-scoped context over gRPC.
-- Publishes `document.content.extracted` after parsing, plus `document.processing` (`PROCESSING`, `COMPLETED`) and `document.processed` events after successful indexing.
+- Publishes lifecycle events: `document.processing`, `document.parsed`, `document.parsed.failed`, `document.processed`, and `document.processed.failed`.
 
 ## Document Processing Flow
 
@@ -63,10 +64,10 @@ Main components:
 2. `DocumentUploadedHandler` checks the `eventId` in the inbox table. Previously processed events are skipped.
 3. The service publishes `document.processing` when processing starts.
 4. The file is downloaded from MinIO; a parser is selected by filename extension or `content_type`.
-5. The service publishes `document.content.extracted`, carrying the full extracted text so the Document service can persist it.
+5. On successful extraction, the service publishes `document.parsed` carrying the full extracted text. On retrieval or parsing failure, it publishes `document.parsed.failed` and stops processing.
 6. The extracted text is split using `RAG_CHUNK_SIZE` and `RAG_CHUNK_OVERLAP`.
 7. Each chunk is embedded and stored in PGVector together with project, document, and user metadata.
-8. The service publishes `document.processed` with the chunk count after indexing completes.
+8. The service publishes `document.processed` with the chunk count after indexing completes. If chunking or indexing fails, it publishes `document.processed.failed`.
 
 ## Requirements
 
@@ -252,9 +253,11 @@ Minimum payload consumed by the service:
 
 | Topic / event type | Published when | Data |
 | --- | --- | --- |
-| `document.content.extracted` | Document parsing succeeds, before chunking/indexing | `documentId`, `projectId`, `userId`, `content` |
 | `document.processing` | Before parsing begins | `documentId`, `projectId`, `userId` |
-| `document.processed` | Document indexing succeeds | `documentId`, `projectId`, `userId`, `chunkCount` |
+| `document.parsed` | Document text extraction succeeds | `documentId`, `projectId`, `userId`, `content` |
+| `document.parsed.failed` | Storage retrieval, parser selection, or text extraction fails | `documentId`, `projectId`, `userId`, `errorCode`, `errorMessage` |
+| `document.processed` | Document chunking and vector indexing succeed | `documentId`, `projectId`, `userId`, `chunkCount` |
+| `document.processed.failed` | Document chunking or vector indexing fails | `documentId`, `projectId`, `userId`, `errorCode`, `errorMessage` |
 
 The consumer stores the `eventId` in the inbox table within the same transaction to avoid re-indexing messages redelivered by Kafka.
 
