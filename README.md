@@ -55,7 +55,7 @@ Main components:
 - Generates embeddings with `qwen3-embedding:0.6b` (1024 dimensions by default).
 - Stores vectors in PostgreSQL with PGVector and performs filtered semantic search through JSONB metadata.
 - Returns project- and document-scoped context over gRPC.
-- Publishes `document.processing` (`PROCESSING`, `COMPLETED`) and `document.processed` events after successful indexing.
+- Publishes `document.content.extracted` after parsing, plus `document.processing` (`PROCESSING`, `COMPLETED`) and `document.processed` events after successful indexing.
 
 ## Document Processing Flow
 
@@ -63,9 +63,10 @@ Main components:
 2. `DocumentUploadedHandler` checks the `eventId` in the inbox table. Previously processed events are skipped.
 3. The service publishes `document.processing` with status `PROCESSING`.
 4. The file is downloaded from MinIO; a parser is selected by filename extension or `content_type`.
-5. The extracted text is split using `RAG_CHUNK_SIZE` and `RAG_CHUNK_OVERLAP`.
-6. Each chunk is embedded and stored in PGVector together with project, document, and user metadata.
-7. The service publishes `document.processed` with the chunk count, then publishes `document.processing` with status `COMPLETED`.
+5. The service publishes `document.content.extracted`, carrying the full extracted text so the Document service can persist it.
+6. The extracted text is split using `RAG_CHUNK_SIZE` and `RAG_CHUNK_OVERLAP`.
+7. Each chunk is embedded and stored in PGVector together with project, document, and user metadata.
+8. The service publishes `document.processed` with the chunk count, then publishes `document.processing` with status `COMPLETED`.
 
 ## Requirements
 
@@ -251,6 +252,7 @@ Minimum payload consumed by the service:
 
 | Topic / event type | Published when | Data |
 | --- | --- | --- |
+| `document.content.extracted` | Document parsing succeeds, before chunking/indexing | `documentId`, `projectId`, `userId`, `content` |
 | `document.processing` | Before parsing and after indexing completes | `documentId`, `projectId`, `userId`, `status` (`PROCESSING` or `COMPLETED`) |
 | `document.processed` | Document indexing succeeds | `documentId`, `projectId`, `userId`, `chunkCount` |
 

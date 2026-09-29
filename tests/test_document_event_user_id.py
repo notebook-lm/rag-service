@@ -3,6 +3,10 @@
 import json
 import unittest
 
+from messaging.events.document_content_extracted import (
+    DocumentContentExtractedData,
+    DocumentContentExtractedEvent,
+)
 from messaging.events.document_processed import DocumentProcessedData, DocumentProcessedEvent
 from messaging.events.document_processing import DocumentProcessingData, DocumentProcessingEvent
 from messaging.events.document_uploaded import DocumentUploadedData, DocumentUploadedEvent
@@ -28,6 +32,24 @@ class DocumentEventUserIdTests(unittest.TestCase):
         payload = json.loads(event.toJson())
 
         self.assertEqual(payload["data"]["userId"], "user-1")
+
+    def test_content_extracted_event_serializes_document_content(self) -> None:
+        event = DocumentContentExtractedEvent(
+            data=DocumentContentExtractedData(
+                document_id="document-1",
+                project_id="project-1",
+                user_id="user-1",
+                content="Extracted notes",
+            ),
+            event_id="event-1",
+            event_type="document.content.extracted",
+            occurred_at="2026-09-28T00:00:00Z",
+        )
+
+        payload = json.loads(event.toJson())
+
+        self.assertEqual(payload["data"]["userId"], "user-1")
+        self.assertEqual(payload["data"]["content"], "Extracted notes")
 
     def test_processing_event_serializes_user_id(self) -> None:
         event = DocumentProcessingEvent(

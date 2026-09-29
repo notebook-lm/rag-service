@@ -6,6 +6,10 @@ from confluent_kafka import Message
 from database.database import Database
 from database.entities.inbox import Inbox
 from database.repositories.inbox_repository import InboxRepository
+from messaging.events.document_content_extracted import (
+    DocumentContentExtractedData,
+    DocumentContentExtractedEvent,
+)
 from messaging.events.document_processed import DocumentProcessedData, DocumentProcessedEvent
 from messaging.events.document_processing import DocumentProcessingData, DocumentProcessingEvent
 from messaging.events.document_uploaded import DocumentUploadedData, DocumentUploadedEvent
@@ -88,6 +92,7 @@ class DocumentUploadedHandler:
         storage_object = self.storage.get(document_uploaded_event.data.object_key)
         parser = self._get_parser(storage_object)
         text = parser.parse(storage_object.content)
+        self._publish_content_extracted(document_uploaded_event, text, message.key())
         chunks = self.chunker.chunk(
             text,
             {
@@ -128,6 +133,29 @@ class DocumentUploadedHandler:
                 pass
 
         raise UnsupportedDocumentTypeError("Unknown document type")
+
+    def _publish_content_extracted(
+        self,
+        event: DocumentUploadedEvent,
+        content: str,
+        key: bytes | str | None,
+    ) -> None:
+        content_extracted_event = DocumentContentExtractedEvent(
+            data=DocumentContentExtractedData(
+                document_id=event.data.document_id,
+                project_id=event.data.project_id,
+                user_id=event.data.user_id,
+                content=content,
+            ),
+            event_id=event.event_id,
+            event_type="document.content.extracted",
+            occurred_at=event.occurred_at,
+        )
+        self.messaging.pub(
+            "document.content.extracted",
+            content_extracted_event.toJson(),
+            key,
+        )
 
     def _publish_processed(
         self,
