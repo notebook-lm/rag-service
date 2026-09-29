@@ -57,6 +57,7 @@ Main components:
 - Stores vectors in PostgreSQL with PGVector and performs filtered semantic search through JSONB metadata.
 - Returns project- and document-scoped context over gRPC.
 - Publishes lifecycle events: `document.processing`, `document.parsed`, `document.parsed.failed`, `document.processed`, and `document.processed.failed`.
+- Processes Kafka documents through a bounded worker pool, so long-running parse/embed/index jobs do not block polling for other events.
 
 ## Document Processing Flow
 
@@ -95,6 +96,8 @@ cp .env.example .env
 | --- | --- | --- |
 | `KAFKA_BOOTSTRAP_SERVERS` | `kafka:9092` | Kafka bootstrap servers. |
 | `KAFKA_CONSUMER_GROUP` | `rag-service` | Consumer group that processes documents. |
+| `RAG_WORKER_CONCURRENCY` | `2` | Maximum number of documents processed concurrently. |
+| `RAG_MAX_IN_FLIGHT` | `4` | Maximum Kafka jobs queued or running before consumption pauses. |
 | `GRPC_PORT` | `50051` | Port on which the gRPC server listens. |
 | `DATABASE_URL` | `postgresql://…/rag_service` | Database used for inbox/idempotency records. |
 | `MINIO_ENDPOINT` | `http://minio:9000` | MinIO endpoint. |

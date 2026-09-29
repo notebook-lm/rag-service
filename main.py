@@ -11,6 +11,7 @@ from config.embedding import (
 )
 from config.grpc import GRPC_PORT
 from config.kafka import KAFKA_BOOTSTRAP_SERVERS, KAFKA_CONSUMER_GROUP
+from config.worker import RAG_MAX_IN_FLIGHT, RAG_WORKER_CONCURRENCY
 from config.rag import RAG_COLLECTION_NAME, RAG_DATABASE_URL
 from config.storage import (
     MINIO_BUCKET,
@@ -62,6 +63,8 @@ messaging: Messaging = Kafka(
         consumer_group=KAFKA_CONSUMER_GROUP,
     ),
     database,
+    worker_concurrency=RAG_WORKER_CONCURRENCY,
+    max_in_flight=RAG_MAX_IN_FLIGHT,
 )
 storage: Storage = MinioClient(
     MinioConfig(
